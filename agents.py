@@ -4,7 +4,6 @@ import math
 from collections import defaultdict
 from constants import N, DIRECTIONS, DX, DY
 
-
 class SmartAgent:
     DIRECTIONS = ['N', 'E', 'S', 'W']
     DIR_TO_VEC = {'N': (0,1), 'E': (1,0), 'S': (0,-1), 'W': (-1,0)}

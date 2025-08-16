@@ -1,4 +1,3 @@
-# display.py
 from constants import N
 
 def display_world2(world, agent):

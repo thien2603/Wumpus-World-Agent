@@ -1,4 +1,6 @@
 # ====== AGENT (human-controlled) - kept for convenience ======
+from constants import N, DIRECTIONS, DX, DY
+
 class Agent:
     def __init__(self):
         self.x = 0
