@@ -1,4 +1,3 @@
-# agents.py
 import heapq
 import math
 from collections import defaultdict
@@ -223,10 +222,105 @@ class SmartAgent:
         return self.DIRECTIONS[(idx + 1) % 4]
 
     def heuristic_state(self, pos, goal_pos):
-        (x1, y1), (x2, y2) = pos, goal_pos
-        return (abs(x1 - x2) + abs(y1 - y2)) * self.COST_MOVE
+        """
+        Heuristic: total expected-risk along the safe path from pos -> goal (sum of risk_expected_cost for each future step).
+        If no safe path exists, return 0 (admissible optimistic).
+        """
+        # accept (x,y) or (x,y,dir)
+        if len(pos) == 3:
+            sx, sy, sdir = pos
+        else:
+            sx, sy = pos
+            sdir = self.dir
 
-    def get_neighbors_state(self, state):
+        # if goal isn't in safe, we cannot get a safe-path risk sum -> fallback 0 (admissible)
+        if goal_pos != (sx, sy) and goal_pos not in self.safe:
+            return 0.0
+
+        path = self._compute_safe_position_path((sx, sy), goal_pos)
+        if path is None:
+            return 0.0
+
+        # sum only the risk_expected_cost for each step into future cells (do NOT include move/turn costs here)
+        total_risk = 0.0
+        for i in range(len(path) - 1):
+            nx, ny = path[i+1]
+            total_risk += self.risk_expected_cost((nx, ny))
+        return total_risk
+
+    def _compute_safe_position_path(self, start_pos, goal_pos):
+        """
+        Compute shortest-cost path (positions only) from start_pos to goal_pos using
+        only cells in self.safe (and not in self.dead_cells). Edge cost = COST_MOVE + risk_expected_cost(neighbor).
+        Returns list of positions [start,...,goal] or None if no safe path exists.
+        """
+        sx, sy = start_pos
+        gx, gy = goal_pos
+        allowed = set(self.safe) - set(self.dead_cells)
+        # allow start even if not in allowed set
+        allowed.add((sx, sy))
+        if (gx, gy) not in allowed:
+            return None
+
+        heap = []
+        heapq.heappush(heap, (0.0, (sx, sy)))
+        dist = { (sx, sy): 0.0 }
+        prev = {}
+        while heap:
+            cost, cur = heapq.heappop(heap)
+            if cur == (gx, gy):
+                # reconstruct path
+                path = [cur]
+                while path[-1] != (sx, sy):
+                    path.append(prev[path[-1]])
+                path.reverse()
+                return path
+            if cost > dist.get(cur, math.inf):
+                continue
+            for nx, ny in self.get_adjacent(cur[0], cur[1]):
+                if (nx, ny) not in allowed:
+                    continue
+                step_cost = self.COST_MOVE + self.risk_expected_cost((nx, ny))
+                new_cost = cost + step_cost
+                if new_cost < dist.get((nx, ny), math.inf):
+                    dist[(nx, ny)] = new_cost
+                    prev[(nx, ny)] = cur
+                    heapq.heappush(heap, (new_cost, (nx, ny)))
+        return None
+
+    def _compute_safe_position_path_cost(self, start_pos, goal_pos):
+        """
+        Return the total path cost (sum of COST_MOVE + risk_expected_cost for each step)
+        along the safest path from start_pos to goal_pos. If no safe path => return math.inf.
+        """
+        path = self._compute_safe_position_path(start_pos, goal_pos)
+        if path is None:
+            return math.inf
+        total = 0.0
+        for i in range(len(path) - 1):
+            nx, ny = path[i+1]
+            total += self.COST_MOVE + self.risk_expected_cost((nx, ny))
+        return total
+
+    # ----------------- NEW: costMove -----------------
+    def costMove(self, current_state, neighbor_pos, goal_pos):
+        """
+        Trả về chi phí 'di chuyển thực tế' khi đi từ current_state -> neighbor_pos **theo yêu cầu**:
+        cost = COST_MOVE + safe_path_cost(neighbor_pos -> goal_pos)
+
+        Nếu không tồn tại đường an toàn từ neighbor -> goal, trả về math.inf (bỏ neighbor).
+        Lưu ý: turning cost được xử lý bởi các action 'turn_left'/'turn_right' riêng biệt.
+        """
+        # neighbor_pos is a tuple (nx, ny)
+        rem_cost = self._compute_safe_position_path_cost(neighbor_pos, goal_pos)
+        if rem_cost == math.inf:
+            return math.inf
+        return self.COST_MOVE + rem_cost
+
+    def get_neighbors_state(self, state, goal):
+        """
+        Now accepts `goal`. Returns neighbors with edge cost computed via costMove for forward/back moves.
+        """
         x, y, d = state
         neighbors = []
         nd = self.turn_left_dir(d)
@@ -236,13 +330,15 @@ class SmartAgent:
         dx, dy = self.DIR_TO_VEC[d]
         nx, ny = x + dx, y + dy
         if 0 <= nx < N and 0 <= ny < N and (nx, ny) not in self.dead_cells:
-            move_cost = self.COST_MOVE + self.risk_expected_cost((nx, ny))
-            neighbors.append(((nx, ny, d), move_cost, 'move_forward', (nx, ny)))
+            move_cost = self.costMove(state, (nx, ny), goal)
+            if move_cost < math.inf:
+                neighbors.append(((nx, ny, d), move_cost, 'move_forward', (nx, ny)))
         bdx, bdy = -self.DIR_TO_VEC[d][0], -self.DIR_TO_VEC[d][1]
         bx, by = x + bdx, y + bdy
         if 0 <= bx < N and 0 <= by < N and (bx, by) not in self.dead_cells:
-            back_cost = self.COST_MOVE + self.risk_expected_cost((bx, by))
-            neighbors.append(((bx, by, d), back_cost, 'move_backward', (bx, by)))
+            back_cost = self.costMove(state, (bx, by), goal)
+            if back_cost < math.inf:
+                neighbors.append(((bx, by, d), back_cost, 'move_backward', (bx, by)))
         return neighbors
 
     def get_path_a_star_state(self, start_state, goal_pos):
@@ -252,7 +348,8 @@ class SmartAgent:
         heapq.heappush(open_heap, (0.0, start))
         came_from = {}
         g_score = {start: 0.0}
-        f_score = {start: self.heuristic_state((start[0], start[1]), goal)}
+        # heuristic is risk_expected_cost-sum along remaining safe path
+        f_score = {start: self.heuristic_state(start, goal)}
         closed = set()
         while open_heap:
             _, current = heapq.heappop(open_heap)
@@ -269,12 +366,14 @@ class SmartAgent:
             if current in closed:
                 continue
             closed.add(current)
-            for (ns, cost, action_name, move_target) in self.get_neighbors_state(current):
+            for (ns, cost, action_name, move_target) in self.get_neighbors_state(current, goal):
                 tentative_g = g_score[current] + cost
                 if tentative_g < g_score.get(ns, math.inf):
                     came_from[ns] = (current, action_name, cost, move_target)
                     g_score[ns] = tentative_g
-                    f = tentative_g + self.heuristic_state((ns[0], ns[1]), goal)
+                    # h = remaining risk sum
+                    h = self.heuristic_state(ns, goal)
+                    f = tentative_g + h
                     heapq.heappush(open_heap, (f, ns))
         return None
 

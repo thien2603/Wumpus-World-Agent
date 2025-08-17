@@ -92,11 +92,14 @@ class WorldUI:
             self.screen.blit(img_scaled, rect.topleft)
 
     def draw_cell(self, x, y, cell, agent_here=None, agent_dir='E'):
+        draw_y = 8 - 1 - y
         rect = pygame.Rect(
-            self.offset_x + x * self.cell_size,
-            self.offset_y + y * self.cell_size,
-            self.cell_size, self.cell_size
+            x * self.cell_size + self.offset_x,
+            draw_y * self.cell_size + self.offset_y,
+            self.cell_size,
+            self.cell_size
         )
+
 
         # Vẽ nền + viền
         pygame.draw.rect(self.screen, WHITE, rect)
@@ -158,7 +161,7 @@ class WorldUI:
 
     def draw_world(self, agent=None):
         Nloc = len(self.world)
-        for y in range(Nloc):
+        for y in reversed(range(Nloc)):
             for x in range(Nloc):
                 agent_here = (agent.x == x and agent.y == y) if agent else False
                 agent_dir = agent.dir if agent_here else 'E'
