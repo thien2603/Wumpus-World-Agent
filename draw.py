@@ -151,8 +151,9 @@ class WorldUI:
 
         # Overlay visited cell
         if cell["visited"]:
-            s = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
-            s.fill((200, 200, 255, 50))
+            s = pygame.Surface((self.cell_size, self.cell_size))
+            s.fill(GRAY)  # Sử dụng màu GRAY đã định nghĩa trong constants
+            s.set_alpha(200)  # Độ trong suốt
             self.screen.blit(s, rect.topleft)
 
     def draw_world(self, agent=None):
