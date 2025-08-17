@@ -54,10 +54,9 @@ from world import create_world, move_wumpuses
 from agents import SmartAgent
 import time
 from draw import *
+import sys
 
 def init_game():
-    global N
-    N = 4
     world, path = create_world()
     agent = SmartAgent()
     return world, agent
@@ -186,6 +185,7 @@ def main():
                     auto_play = False
                 elif event.key == pygame.K_x:
                     running = False
+                    sys.exit()
 
         # Auto play
         if auto_play and not game_over and agent.alive and not agent.found_gold:
