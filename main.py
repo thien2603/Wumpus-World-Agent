@@ -376,7 +376,7 @@ def main():
                 agent1.on_wumpus_moved(world1)
         if auto2 and step % 5 == 0:
             if not game_over2:
-                newpos = move_wumpuses(world1)
+                newpos = move_wumpuses(world2)
                 agent2.on_wumpus_moved(world2)
 
         # post-act checks (per-agent, per-world)
