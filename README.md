@@ -69,7 +69,7 @@ python main1.py
 
 ## Điều khiển & Hướng dẫn chơi
 Khi chạy sẽ hiện menu chính. Chọn **Start Game** để bắt đầu. Popup yêu cầu nhập:
-- `N` — kích thước bản đồ (NxN), số nguyên ≥ 2.  
+- `N` — kích thước bản đồ (NxN), 8 ≥ số nguyên ≥ 2.  
 - `K` — số Wumpus, số nguyên ≥ 0 (không nên quá lớn so với diện tích bản đồ).
 
 Phím tắt trong game:
@@ -128,7 +128,7 @@ Khi thêm tính năng, giữ interface `create_world(n, k)` để đảm bảo t
 ---
 
 ## License & Liên hệ
-- License: *Không có license* (nếu muốn public, cân nhắc thêm MIT/BSD...).  
+- License: *Không có license*
 - Liên hệ: Nhóm lớp 23 CLC02 (các thành viên ở trên).
 
 ---
