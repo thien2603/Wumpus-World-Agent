@@ -1,99 +1,134 @@
-Wumpus World — PyGame (Dual Agents)
+# Wumpus World — PyGame (Dual Agents)
 
-Phiên bản mô phỏng Wumpus World bằng Python + Pygame, hiển thị 2 agents trên 2 bản đồ giống hệt để so sánh hành vi. README này là bản sẵn sàng copy — paste vào README.md.
+**Mô tả ngắn:**  
+Phiên bản mô phỏng *Wumpus World* bằng Python + Pygame. Chương trình hiển thị **2 agents** chạy trên **2 bản đồ giống hệt** (tách biệt trạng thái) để so sánh hành vi: một agent thông minh (SmartAgent) và một agent cơ bản (AgentNormal).
 
-Giới thiệu
+---
 
-Wumpus World là một bài toán kinh điển trong trí tuệ nhân tạo: agent di chuyển trên lưới, tránh hố (pits) và Wumpus, tìm vàng rồi quay về cửa ra. Project này triển khai:
+## 📌 Mục lục
+1. [Giới thiệu](#giới-thiệu)  
+2. [Tính năng chính](#tính-năng-chính)  
+3. [Yêu cầu & Cài đặt](#yêu-cầu--cài-đặt)  
+4. [Cách chạy](#cách-chạy)  
+5. [Điều khiển & Hướng dẫn chơi](#điều-khiển--hướng-dẫn-chơi)  
+6. [Cấu trúc dự án](#cấu-trúc-dự-án)  
+7. [Gợi ý tuỳ chỉnh](#gợi-ý-tuỳ-chỉnh)  
+8. [Thành viên nhóm (Lớp 23 CLC02)](#thành-viên-nhóm-lớp-23-clc02)  
+9. [Đóng góp](#đóng-góp)  
+10. [License & Liên hệ](#license--liên-hệ)
 
-Một agent thông minh (SmartAgent) dùng các luật tin tưởng (belief rules) + A* với ước lượng rủi ro để ra quyết định.
+---
 
-Một agent cơ bản (AgentNormal) thực hiện hành vi đơn giản để so sánh.
+## Giới thiệu
+*Wumpus World* là bài toán cổ điển trong AI: agent di chuyển trên lưới NxN, tránh **pit** (hố) và **Wumpus**, tìm **vàng** rồi quay về ô xuất phát. Project này mô phỏng hành vi của hai loại agent để thấy tác dụng của các chiến lược khác nhau.
 
-Giao diện đồ hoạ sử dụng Pygame, hiển thị hai khung song song (trái/phải) cùng một bản đồ (độc lập về trạng thái).
+- **SmartAgent**: sử dụng các quy tắc tin cậy (belief rules) + A* với ước lượng rủi ro để lập kế hoạch và ra quyết định.  
+- **AgentNormal**: agent đơn giản để so sánh (heuristic/rule-based cơ bản).
 
-Thành viên nhóm (Lớp 23 CLC02)
+Giao diện sử dụng **Pygame**, chia màn hình làm hai khung (trái/phải), mỗi khung hiển thị một agent trên bản đồ giống nhau nhưng trạng thái độc lập.
 
-Nguyễn Bách Khoa
+---
 
-Trương Quang Huy
+## Tính năng chính
+- Tạo bản đồ ngẫu nhiên (số Wumpus, xác suất pit có thể thay đổi).  
+- SmartAgent dùng forward-chaining để cập nhật niềm tin và A* để lập kế hoạch an toàn.  
+- Hiển thị trực quan (grid, agent, pit, wumpus, vàng, percepts nếu bật debug).  
+- Popup cho phép thay đổi tham số **N** (kích thước) và **K** (số Wumpus) trước khi khởi động.
 
-Nguyễn Nhật Nam
+---
 
-Phan Trung Tuấn
+## Yêu cầu & Cài đặt
+- Python 3.8+
+- pygame
 
-Trần Danh Thiện
-
-Yêu cầu
-
-Python 3.8 trở lên
-
-pygame
-
-Cài pygame:
-
+Cài pygame (pip):
+```bash
 pip install pygame
+```
 
-Cách chạy
+Clone repo:
+```bash
+git clone https://github.com/thien2603/Wumpus-World-Agent.git
+cd Wumpus-World-Agent
+```
 
-Clone repository:
+---
 
-git clone https://github.com/thien2603/Wumpus-World-Agent cd
-
-Khởi chạy:
-
+## Cách chạy
+Mặc định entrypoint là `main.py` (hoặc `main1.py` / `main_shared.py` tuỳ repo). Chạy:
+```bash
 python main.py
+```
 
-Lưu ý: file entrypoint của project mẫu là main.py. Nếu repo của bạn dùng tên khác, chạy file entrypoint tương ứng.
+Nếu file entrypoint khác, chạy file tương ứng, ví dụ:
+```bash
+python main1.py
+```
 
-Hướng dẫn chơi / Điều khiển
+---
 
-Khi chạy chương trình, menu chính hiện lên. Chọn Start Game để bắt đầu.
+## Điều khiển & Hướng dẫn chơi
+Khi chạy sẽ hiện menu chính. Chọn **Start Game** để bắt đầu. Popup yêu cầu nhập:
+- `N` — kích thước bản đồ (NxN), số nguyên ≥ 2.  
+- `K` — số Wumpus, số nguyên ≥ 0 (không nên quá lớn so với diện tích bản đồ).
 
-Trong popup nhập:
+Phím tắt trong game:
+- `S` — Restart trò chơi (tạo world mới).  
+- `D` — Bật/tắt chế độ debug (hiện percepts/niềm tin agent).  
+- `M` — Move Wumpus (thủ công, nếu có).  
+- `Space` — Step (thực hiện một bước cho cả hai agent nếu đang tạm dừng).  
+- `1`/`2` — Toggle auto cho Agent trái/phải.  
+- `A` — Bật/tắt chế độ auto cho cả hai agent.  
+- `X` hoặc đóng cửa sổ — Thoát.
 
-N — kích thước bản đồ (NxN), nguyên ≥ 2.
+**Mẹo:** không nên đặt số Wumpus quá lớn so với `N*N` vì có thể gây bế tắc hoặc chết sớm cho agent.
 
-K — số Wumpus, nguyên ≥ 0 (không nên quá lớn so với diện tích bản đồ).
+---
 
-Bàn phím:
+## Cấu trúc dự án (gợi ý)
+```
+├─ main.py (entrypoint)
+├─ constants.py
+├─ world.py
+├─ agents.py
+├─ Agent.py
+├─ draw.py
+├─ menu.py
+├─ img/
+│  └─ logo_game.jpg
+└─ README.md
+```
 
-S - Restart trò chơi
+---
 
-D — bật/tắt chế độ debug (hiện thông tin nội bộ agent).
+## Gợi ý tuỳ chỉnh
+- Thay đổi tham số mặc định trong `constants.py` (N, K, PIT_PROB, kích thước ô, màu sắc...).  
+- `world.create_world(n, k)` hỗ trợ truyền `n, k` để tạo world theo tham số runtime. Giữ interface này để dễ test.  
+- Nếu muốn agent đọc kích thước động, sửa module agent để tham chiếu kích thước thế giới từ `len(world)` thay vì import cứng `N` từ `constants`.
 
-X hoặc đóng cửa sổ — thoát chương trình.
+---
 
-Mô tả giao diện
+## Thành viên nhóm (Lớp 23 CLC02)
+- Nguyễn Bách Khoa  
+- Trương Quang Huy  
+- Nguyễn Nhật Nam  
+- Phan Trung Tuấn  
+- Trần Danh Thiện
 
-Màn hình chia làm hai khung song song:
+---
 
-Trái: SmartAgent (hành vi nâng cao).
+## Đóng góp
+1. Fork repository.  
+2. Tạo branch feature/bugfix.  
+3. Commit & push.  
+4. Tạo Pull Request.
 
-Phải: AgentNormal (hành vi cơ bản).
+Khi thêm tính năng, giữ interface `create_world(n, k)` để đảm bảo tương thích với menu. Nếu thay đổi API module, ghi rõ trong PR.
 
-Mỗi khung vẽ lưới, các ô, agent, Wumpus, hố, vàng (nếu để hiển thị), và thanh trạng thái (score, vị trí, hướng, debug info...).
+---
 
-Thanh status hiển thị điểm, vị trí agent, số ô đã thăm, số nghi vấn pit/wumpus, v.v.
+## License & Liên hệ
+- License: *Không có license* (nếu muốn public, cân nhắc thêm MIT/BSD...).  
+- Liên hệ: Nhóm lớp 23 CLC02 (các thành viên ở trên).
 
-Gợi ý cấu hình/tuỳ chỉnh
-
-Thay đổi cấu hình mặc định trong constants.py (N, K, PIT_PROB, kích thước ô, màu sắc...).
-
-Cấu trúc thư mục (gợi ý) / ├─ main.py ├─ constants.py ├─ world.py ├─ agents.py ├─ Agent.py ├─ draw.py ├─ menu.py ├─ img/ │ └─ logo_game.jpg └─ README.md
-
-Phát triển & đóng góp
-
-Fork → tạo branch → commit → PR.
-
-Khi thêm tính năng, giữ interface hàm create_world(n,k) để dễ test tự động.
-
-Viết unit-test cho agent nếu muốn kiểm tra logic belief/risk.
-
-License
-
-Không có license
-
-Liên hệ
-
-Nhóm lớp 23 CLC02 — nếu cần hỗ trợ thêm: liên hệ trực tiếp với các thành viên nhóm.
+---
