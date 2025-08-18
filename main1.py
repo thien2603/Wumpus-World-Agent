@@ -42,7 +42,7 @@ def prompt_map_params(screen, default_n=4, default_w=1):
 
     # input state
     inputs = [str(default_n), str(default_w)]
-    labels = ["Map size N (int >= 2)", "Number of Wumpus (int >= 0)"]
+    labels = ["Map size N ( 8 >= int >= wumpus + 1)", "Number of Wumpus (int >= 0)"]
     active = 0  # which field is active (0 or 1)
 
     clock = pygame.time.Clock()
@@ -148,7 +148,6 @@ def show_main_menu(screen):
 
     main_items = [
         ("Start Game", start_cb),
-        ("Options", options_cb),
         ("Quit", quit_cb),
     ]
     main_menu = Menu(screen, "Wumpus World - Shared Map", main_items)
