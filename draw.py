@@ -92,7 +92,7 @@ class WorldUI:
             self.screen.blit(img_scaled, rect.topleft)
 
     def draw_cell(self, x, y, cell, agent_here=None, agent_dir='E'):
-        draw_y = 8 - 1 - y
+        draw_y = N - 1 - y
         rect = pygame.Rect(
             x * self.cell_size + self.offset_x,
             draw_y * self.cell_size + self.offset_y,

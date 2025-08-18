@@ -25,7 +25,6 @@ class SmartAgent:
         self.possible_pits = set()
         self.possible_wumpus = set()
         self.last_dead_cell = None
-        self.dead_cells = set()
         self.id = 0
 
         # arrow state
@@ -102,7 +101,7 @@ class SmartAgent:
         percepts = world[self.y][self.x]["percept"]
         if not percepts["breeze"] and not percepts["stench"]:
             for nx, ny in self.get_adjacent(self.x, self.y):
-                if (nx, ny) not in self.visited and (nx, ny) not in self.dead_cells:
+                if (nx, ny) not in self.visited:
                     if (nx, ny) not in self.safe:
                         self.safe.add((nx, ny))
                         if (nx, ny) in self.possible_pits:
@@ -121,7 +120,7 @@ class SmartAgent:
         percepts = world[self.y][self.x]["percept"]
         if percepts["breeze"]:
             for nx, ny in self.get_adjacent(self.x, self.y):
-                if (nx, ny) not in self.visited and (nx, ny) not in self.safe and (nx, ny) not in self.dead_cells:
+                if (nx, ny) not in self.visited and (nx, ny) not in self.safe:
                     if (nx, ny) not in self.possible_pits:
                         self.possible_pits.add((nx, ny))
                         self.suspicion_pit_count[(nx, ny)] += 1
@@ -133,7 +132,7 @@ class SmartAgent:
         percepts = world[self.y][self.x]["percept"]
         if percepts["stench"]:
             for nx, ny in self.get_adjacent(self.x, self.y):
-                if (nx, ny) not in self.visited and (nx, ny) not in self.safe and (nx, ny) not in self.dead_cells:
+                if (nx, ny) not in self.visited and (nx, ny) not in self.safe:
                     if (nx, ny) not in self.possible_wumpus:
                         self.possible_wumpus.add((nx, ny))
                         self.suspicion_wumpus_count[(nx, ny)] += 1
@@ -145,7 +144,6 @@ class SmartAgent:
         before = set(self.possible_pits)
         self.possible_pits -= self.safe
         self.possible_pits -= self.visited
-        self.possible_pits -= self.dead_cells
         if set(self.possible_pits) != before:
             changed = True
         for cell in list(self.suspicion_pit_count.keys()):
@@ -154,7 +152,6 @@ class SmartAgent:
         before = set(self.possible_wumpus)
         self.possible_wumpus -= self.safe
         self.possible_wumpus -= self.visited
-        self.possible_wumpus -= self.dead_cells
         if set(self.possible_wumpus) != before:
             changed = True
         for cell in list(self.suspicion_wumpus_count.keys()):
@@ -256,7 +253,7 @@ class SmartAgent:
         """
         sx, sy = start_pos
         gx, gy = goal_pos
-        allowed = set(self.safe) - set(self.dead_cells)
+        allowed = set(self.safe)
         # allow start even if not in allowed set
         allowed.add((sx, sy))
         if (gx, gy) not in allowed:
@@ -329,13 +326,13 @@ class SmartAgent:
         neighbors.append(((x, y, nd), self.COST_TURN, 'turn_right', None))
         dx, dy = self.DIR_TO_VEC[d]
         nx, ny = x + dx, y + dy
-        if 0 <= nx < N and 0 <= ny < N and (nx, ny) not in self.dead_cells:
+        if 0 <= nx < N and 0 <= ny < N:
             move_cost = self.costMove(state, (nx, ny), goal)
             if move_cost < math.inf:
                 neighbors.append(((nx, ny, d), move_cost, 'move_forward', (nx, ny)))
         bdx, bdy = -self.DIR_TO_VEC[d][0], -self.DIR_TO_VEC[d][1]
         bx, by = x + bdx, y + bdy
-        if 0 <= bx < N and 0 <= by < N and (bx, by) not in self.dead_cells:
+        if 0 <= bx < N and 0 <= by < N:
             back_cost = self.costMove(state, (bx, by), goal)
             if back_cost < math.inf:
                 neighbors.append(((bx, by, d), back_cost, 'move_backward', (bx, by)))
@@ -416,7 +413,6 @@ class SmartAgent:
                 cell = world[self.y][self.x]
                 if cell["pit"] or cell["wumpus"]:
                     self.alive = False
-                    self.dead_cells.add((self.x, self.y))
                     self.last_dead_cell = (self.x, self.y)
                     print("💀 SmartAgent died entering cell!", (self.x, self.y))
                     self.update_score("die")
@@ -441,7 +437,7 @@ class SmartAgent:
         return False
 
     def rule_move_to_safe_unvisited(self, world):
-        safe_unvisited = [c for c in self.safe if c not in self.visited and c not in self.dead_cells]
+        safe_unvisited = [c for c in self.safe if c not in self.visited]
         if not safe_unvisited:
             return False
         start_state = (self.x, self.y, self.dir)
@@ -475,7 +471,6 @@ class SmartAgent:
                 cell = world[self.y][self.x]
                 if cell["pit"] or cell["wumpus"]:
                     self.alive = False
-                    self.dead_cells.add((self.x, self.y))
                     self.last_dead_cell = (self.x, self.y)
                     print("💀 SmartAgent died entering cell!", (self.x, self.y))
                     self.update_score("die")
@@ -487,7 +482,7 @@ class SmartAgent:
         return True
 
     def rule_move_least_risk(self, world):
-        candidates = list((self.possible_pits | self.possible_wumpus) - self.visited - self.dead_cells)
+        candidates = list((self.possible_pits | self.possible_wumpus) - self.visited)
         if not candidates:
             return False
         start_state = (self.x, self.y, self.dir)
@@ -528,7 +523,6 @@ class SmartAgent:
                 cell = world[self.y][self.x]
                 if cell["pit"] or cell["wumpus"]:
                     self.alive = False
-                    self.dead_cells.add((self.x, self.y))
                     self.last_dead_cell = (self.x, self.y)
                     print("💀 SmartAgent died entering cell!", (self.x, self.y))
                     self.update_score("die")
@@ -555,47 +549,65 @@ class SmartAgent:
                 print("🏹 Arrow hit the wall.")
                 return
             if world[y][x]["wumpus"]:
+                # kill the wumpus at (x,y)
                 world[y][x]["wumpus"] = False
                 print("💀 Wumpus killed! You hear a SCREAM!")
-                for ddx, ddy in [(0,1),(0,-1),(1,0),(-1,0)]:
-                    nx, ny = x + ddx, y + ddy
-                    if 0 <= nx < N and 0 <= ny < N:
-                        world[ny][nx]["percept"]["stench"] = False
+
+                # --- RECOMPUTE ALL 'stench' percepts BASED ON REMAINING WUMPUSes ---
+                # First clear all stench
+                for yy in range(N):
+                    for xx in range(N):
+                        world[yy][xx]["percept"]["stench"] = False
+
+                # Then for every remaining wumpus, set stench in adjacent cells
+                for yy in range(N):
+                    for xx in range(N):
+                        if world[yy][xx].get("wumpus", False):
+                            for ddx, ddy in [(0,1),(0,-1),(1,0),(-1,0)]:
+                                nx, ny = xx + ddx, yy + ddy
+                                if 0 <= nx < N and 0 <= ny < N:
+                                    world[ny][nx]["percept"]["stench"] = True
+
+                # finished
                 return
         print("🏹 Arrow missed.")
 
+
+    # ----------------- HANDLE WUMPUS MOVE -----------------
     # ----------------- HANDLE WUMPUS MOVE -----------------
     def on_wumpus_moved(self, world):
         """
-        Called when Wumpus moved (we rebuild possible_wumpus based on current percepts
-        at visited cells and at current position).
+        Called when Wumpus moved. Rebuild possible_wumpus based on current percepts
+        at visited cells and at current position.
         """
-        # clear confirmed
-        if hasattr(self, "confirmed_wumpus"):
-            self.confirmed_wumpus = None
+        # clear any previous confirmation
+        self.confirmed_wumpus = None
 
         # reset and rebuild
         self.possible_wumpus.clear()
         self.suspicion_wumpus_count.clear()
 
+        # consider visited cells and current cell
         check_cells = set(self.visited)
         check_cells.add((self.x, self.y))
-        for (vx, vy) in check_cells:
+        for (vx, vy) in list(check_cells):
             if not (0 <= vx < N and 0 <= vy < N):
                 continue
             percept = world[vy][vx]["percept"]
             if percept.get("stench", False):
+                # any adjacent cell to a stench could be a wumpus
                 for nx, ny in self.get_adjacent(vx, vy):
                     if (nx, ny) in self.safe:
                         continue
-                    if (nx, ny) in self.dead_cells:
-                        continue
+                    # increment suspicion count even if already present
                     self.possible_wumpus.add((nx, ny))
                     self.suspicion_wumpus_count[(nx, ny)] += 1
 
+        # detect certain wumpus if possible
         _ = self.rule_detect_certain_wumpus(world)
         print("🔁 Wumpus moved -> possible_wumpus rebuilt:", self.possible_wumpus,
               "suspicion_counts:", dict(self.suspicion_wumpus_count))
+
 
     # ----------------- APPLY RULES / ACT -----------------
     def choose_and_execute_decision(self, world):

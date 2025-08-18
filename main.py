@@ -34,7 +34,6 @@ def show_main_menu(screen):
 
     main_items = [
         ("Start Game", start_cb),
-        ("Options", options_cb),
         ("Quit", quit_cb),
     ]
     main_menu = Menu(screen, "Wumpus World", main_items)
@@ -184,6 +183,9 @@ def main():
             running, auto_play, _ = handle_events(
                 event, world, agent, ui, auto_play, game_state["show_debug"], game_over
             )
+            if not running:
+                pygame.quit()
+                return
             if event.type == pygame.KEYDOWN and game_over:
                 if event.key == pygame.K_s:
                     # Reset game
@@ -194,7 +196,9 @@ def main():
                     auto_play = game_state["auto_play"]
                 elif event.key == pygame.K_x:
                     running = False
-
+                    pygame.quit()
+                    return
+                
         # Auto play
         if auto_play and not game_over and agent.alive and not agent.found_gold:
             agent.act(world)

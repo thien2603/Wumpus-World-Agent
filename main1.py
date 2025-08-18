@@ -228,12 +228,12 @@ def show_game_over_screen(surface, result):
 
 
 def show_status_bar(surface, agent, show_debug, title=None):
-    font = pygame.font.SysFont('Arial', 14)
+    font = pygame.font.SysFont('Arial', 20)
     if title:
         surface.blit(font.render(title, True, WHITE), (6, 6))
     status_text = f"Score:{agent.score} | Pos:({agent.x},{agent.y}) Dir:{agent.dir} | Gold:{'Yes' if agent.found_gold else 'No'} | Arrow:{'Used' if agent.arrow_used else 'Avail'} | Alive:{'Yes' if agent.alive else 'No'}"
     surface.blit(font.render(status_text, True, WHITE), (6, 24))
-    controls_text = "R=ResetView | A=Auto(all) | 1/2 Auto(left/right) | Space=Step | M=Move Wumpus | D=ToggleDebug"
+    controls_text = "X: Exit | S: Restart | D: Debug"
     surface.blit(font.render(controls_text, True, WHITE), (6, 44))
     if show_debug:
         debug_text = f"Safe:{len(agent.safe)} Visited:{len(agent.visited)} PitC:{len(agent.possible_pits)} WumpC:{len(agent.possible_wumpus)}"
@@ -335,28 +335,6 @@ def main():
                 if event.key == pygame.K_x:
                     running = False
                     break
-                elif event.key == pygame.K_m:
-                    # only allow manual move if game not finished for both agents
-                    if not (game_over1 and game_over2):
-                        #newpos = move_wumpuses(world1)
-                        agent1.on_wumpus_moved(world1)
-                        agent2.on_wumpus_moved(world2)
-                elif event.key == pygame.K_r:
-                    ui_left.reset_view()
-                    ui_right.reset_view()
-                elif event.key == pygame.K_SPACE:
-                    if not game_over1 and agent1.alive and not agent1.found_gold:
-                        agent1.act(world1)
-                    if not game_over2 and agent2.alive and not agent2.found_gold:
-                        agent2.act(world2)
-                elif event.key == pygame.K_a:
-                    auto_all = not auto_all
-                    auto1 = auto_all
-                    auto2 = auto_all
-                elif event.key == pygame.K_1:
-                    auto1 = not auto1
-                elif event.key == pygame.K_2:
-                    auto2 = not auto2
                 elif event.key == pygame.K_d:
                     debug = not debug
                     game_state["show_debug"] = debug
@@ -393,10 +371,14 @@ def main():
         if not game_over2 and auto2 and agent2.alive:
             agent2.act(world2)
             pygame.time.delay(80)
-        if auto_all and (step % 5) == 0:
-            #newpos = move_wumpuses(world1)
-            agent1.on_wumpus_moved(world1)
-            agent2.on_wumpus_moved(world2)
+        if auto1 and step % 5 == 0:
+            if not game_over1:
+                newpos = move_wumpuses(world1)
+                agent1.on_wumpus_moved(world1)
+        if auto2 and step % 5 == 0:
+            if not game_over2:
+                newpos = move_wumpuses(world1)
+                agent2.on_wumpus_moved(world2)
 
         # post-act checks (per-agent, per-world)
         if agent1.found_gold and (agent1.x, agent1.y) == (0, 0):
