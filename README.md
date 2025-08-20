@@ -55,15 +55,11 @@ cd Wumpus-World-Agent
 ---
 
 ## Cách chạy
-Mặc định entrypoint là `main.py` (hoặc `main1.py` / `main_shared.py` tuỳ repo). Chạy:
+Mặc định entrypoint là `main.py`. Chạy:
 ```bash
 python main.py
 ```
 
-Nếu file entrypoint khác, chạy file tương ứng, ví dụ:
-```bash
-python main1.py
-```
 
 ---
 
